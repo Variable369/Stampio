@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stampio - Mapa</title>
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    
+    <!-- Navbar -->
+    <div id="navbar">
+        <ul>
+            <li><a href="index.html"><i data-lucide="home" class="icon"></i> Domů</a></li>
+            <li><a href="map.html" class="active"><i data-lucide="map" class="icon"></i> Mapa</a></li>
+            <li><a href="catalog.html"><i data-lucide="book-open" class="icon"></i> Katalog</a></li>
+            <li><a href="info.html"><i data-lucide="info" class="icon"></i> Info</a></li>
+        </ul>
+        <div id="user-status"></div>
+    </div>
+
+    <!-- Panel pro přidávání známek (Admin) -->
+    <div class="search-container" id="admin-panel" style="display: none;">
+        <form id="add-stamp-form">
+            <div class="input-group">
+                <label for="stamp-number">Číslo známky:</label>
+                <input type="number" id="stamp-number" placeholder="Např. 209..." required>
+            </div>
+
+            <div class="input-group">
+                <label for="stamp-name">Název a místo:</label>
+                <input type="text" id="stamp-name" placeholder="Vyplní se z katalogu..." readonly style="width: 280px;">
+            </div>
+
+            <button type="submit" id="add-btn" disabled>
+                <i data-lucide="plus" style="width: 16px; height: 16px;"></i> Přidat do sbírky
+            </button>
+        </form>
+    </div>
+
+    <!-- Mapa -->
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script type="module" src="map.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            lucide.createIcons();
+        });
+    </script>
+</body>
+</html>

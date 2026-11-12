@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stampio - Katalog známek</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    
+    <!-- Navbar -->
+    <div id="navbar">
+        <ul>
+            <li><a href="index.html"><i data-lucide="home" class="icon"></i> Domů</a></li>
+            <li><a href="map.html"><i data-lucide="map" class="icon"></i> Mapa</a></li>
+            <li><a href="catalog.html" class="active"><i data-lucide="book-open" class="icon"></i> Katalog</a></li>
+            <li><a href="info.html"><i data-lucide="info" class="icon"></i> Info</a></li>
+        </ul>
+        <div id="user-status"></div>
+    </div>
+
+    <!-- Vyhledávací a filtrační lišta -->
+    <div class="search-container">
+        <div id="add-stamp-form">
+            <div class="input-group" style="flex-grow: 1; max-width: 400px;">
+                <label for="catalog-search">Vyhledat známku:</label>
+                <input type="text" id="catalog-search" placeholder="Hledat podle čísla, názvu nebo okresu...">
+            </div>
+            <div class="input-group">
+                <label for="kraj-filter">Filtr podle kraje:</label>
+                <select id="kraj-filter">
+                    <option value="">Všechny kraje</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Katalog -->
+    <section class="stats-container" style="margin-top: 32px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <h2 style="margin: 0;"><i data-lucide="book-marked"></i> Katalog Turistických Známek</h2>
+            <span id="catalog-count" style="color: var(--color-text-muted); font-size: 14px; font-weight: 600;">Načítám...</span>
+        </div>
+
+        <div id="catalog-list" class="catalog-grid"></div>
+    </section>
+
+    <script type="module" src="catalog.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            lucide.createIcons();
+        });
+    </script>
+</body>
+</html>

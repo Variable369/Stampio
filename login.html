@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stampio - Přihlášení</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    
+    <!-- Navbar -->
+    <div id="navbar">
+        <ul>
+            <li><a href="index.html">Domů</a></li>
+            <li><a href="map.html">Mapa</a></li>
+            <li><a href="catalog.html">Katalog</a></li>
+            <li><a href="info.html">Info</a></li>
+        </ul>
+    </div>
+
+    <div class="login-container">
+        <h2>Přihlášení do systému Stampio</h2>
+        <form id="login-form">
+            <div class="input-group">
+                <label for="username">Uživatelské jméno:</label>
+                <input type="text" id="username" placeholder="admin nebo Uživatel1" required>
+            </div>
+            <div class="input-group" style="margin-top: 15px;">
+                <label for="password">Heslo:</label>
+                <input type="password" id="password" placeholder="Zadejte heslo" required>
+            </div>
+            <button type="submit" class="login-btn">Přihlásit se</button>
+        </form>
+        <p id="error-message" style="color: red; display: none; margin-top: 15px;"></p>
+    </div>
+
+    <script type="module" src="login.js"></script>
+</body>
+</html>

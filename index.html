@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stampio - Domů</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    
+    <!-- Navbar -->
+    <div id="navbar">
+        <ul>
+            <li><a href="index.html" class="active"><i data-lucide="home" class="icon"></i> Domů</a></li>
+            <li><a href="map.html"><i data-lucide="map" class="icon"></i> Mapa</a></li>
+            <li><a href="catalog.html"><i data-lucide="book-open" class="icon"></i> Katalog</a></li>
+            <li><a href="info.html"><i data-lucide="info" class="icon"></i> Info</a></li>
+        </ul>
+        <div id="user-status"></div>
+    </div>
+
+    <!-- Hero Sekce -->
+    <section class="hero-section">
+        <div class="hero-content">
+            <h1>Osobní sbírka Turistických Známek</h1>
+            <p>Interaktivní deník a digitální mapa cestovatelských trofejí z celého Česka.</p>
+            <a href="map.html" class="cta-btn">
+                <i data-lucide="map-pin"></i> Prozkoumat mapu
+            </a>
+        </div>
+    </section>
+
+    <!-- Statistiky -->
+    <section class="stats-container">
+        <h2><i data-lucide="bar-chart-3"></i> Přehled sbírky</h2>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">Vlastněné známky</span>
+                    <div class="stat-icon"><i data-lucide="award"></i></div>
+                </div>
+                <div class="stat-value" id="stat-total">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">Pokrytí ČR (z ~3000 TZ)</span>
+                    <div class="stat-icon"><i data-lucide="compass"></i></div>
+                </div>
+                <div class="stat-value" id="stat-coverage">0,00 %</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">Nejnavštěvovanější kraj</span>
+                    <div class="stat-icon"><i data-lucide="landmark"></i></div>
+                </div>
+                <div class="stat-value" id="stat-top-region" style="font-size: 22px;">-</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Poslední úlovky -->
+    <section class="recent-section">
+        <h2><i data-lucide="sparkles"></i> Poslední přidané známky</h2>
+        <div class="recent-grid" id="recent-stamps-grid">
+            <p style="text-align: center; color: var(--color-text-muted); width: 100%;">Načítám známky...</p>
+        </div>
+    </section>
+
+    <script type="module" src="index.js"></script>
+    <script>
+        // Inicializace Lucide ikon po načtení
+        document.addEventListener("DOMContentLoaded", () => {
+            lucide.createIcons();
+        });
+    </script>
+</body>
+</html>
