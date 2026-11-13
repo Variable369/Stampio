@@ -14,21 +14,25 @@ const ownedStampNumbers = new Set();
 
 onAuthStateChanged(auth, (user) => {
     if (user) {
-        const username = user.email === 'admin@stampio.cz' ? 'admin' : 'Uživatel1';
-        userStatus.innerHTML = `<i data-lucide="user" class="icon"></i> ${username} | <a href="#" id="logout-btn" style="color: #fef08a;">Odhlásit</a>`;
+        const displayName = user.email === 'admin@stampio.cz' ? 'Admin' : user.email.split('@')[0];
+        userStatus.innerHTML = `<i data-lucide="user" class="icon"></i> ${displayName} | <a href="#" id="logout-btn" style="color: #fef08a;">Odhlásit</a>`;
         document.getElementById('logout-btn').addEventListener('click', (e) => {
             e.preventDefault();
             signOut(auth);
         });
+        loadUserOwnedStamps(user.uid);
     } else {
         userStatus.innerHTML = `<a href="login.html" style="color: white; font-weight: 600;"><i data-lucide="log-in" class="icon"></i> Přihlásit se</a>`;
+        ownedStampNumbers.clear();
+        filterStamps();
     }
     if (window.lucide) window.lucide.createIcons();
 });
 
-async function loadOwnedStamps() {
+async function loadUserOwnedStamps(uid) {
+    ownedStampNumbers.clear();
     try {
-        const querySnapshot = await getDocs(collection(db, "stamps"));
+        const querySnapshot = await getDocs(collection(db, "users", uid, "stamps"));
         querySnapshot.forEach((docSnap) => {
             const data = docSnap.data();
             if (data.number) {
@@ -36,9 +40,9 @@ async function loadOwnedStamps() {
             }
         });
     } catch (error) {
-        console.error("Chyba při načítání známek z DB: ", error);
+        console.error("Chyba při načítání známek uživatele: ", error);
     }
-    renderCatalog(STAMPS_CATALOG);
+    filterStamps();
 }
 
 function initKrajFilter() {
@@ -104,4 +108,4 @@ searchInput.addEventListener('input', filterStamps);
 krajFilter.addEventListener('change', filterStamps);
 
 initKrajFilter();
-loadOwnedStamps();
+renderCatalog(STAMPS_CATALOG);

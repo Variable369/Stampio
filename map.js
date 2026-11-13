@@ -4,7 +4,6 @@ import { STAMPS_CATALOG } from './stamps-catalog.js';
 import { collection, addDoc, getDocs, deleteDoc, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-// 1. DEKLARACE PRVKŮ Z DOM
 const numberInput = document.getElementById('stamp-number');
 const nameInput = document.getElementById('stamp-name');
 const addBtn = document.getElementById('add-btn');
@@ -12,29 +11,24 @@ const form = document.getElementById('add-stamp-form');
 const adminPanel = document.getElementById('admin-panel');
 const userStatus = document.getElementById('user-status');
 
-// 2. INICIALIZACE MAPY (Výřez na ČR)
 const map = L.map('map').setView([49.8175, 15.4730], 7);
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { 
     maxZoom: 19,
-    attribution: '&copy; OpenStreetMap'
+    attribution: '© OpenStreetMap'
 }).addTo(map);
 
 let selectedStamp = null;
-let isAdmin = false;
+let currentUser = null;
 const activeMarkers = {};
 
-// 3. SLEDOVÁNÍ STAVU PŘIHLÁŠENÍ UŽIVATELE
+// Sledování přihlášení
 onAuthStateChanged(auth, (user) => {
+    currentUser = user;
+
     if (user) {
-        if (user.email === 'admin@stampio.cz') {
-            isAdmin = true;
-            if (adminPanel) adminPanel.style.display = 'block';
-            if (userStatus) userStatus.innerHTML = `<i data-lucide="shield" class="icon"></i> Admin | <a href="#" id="logout-btn" style="color: #fef08a;">Odhlásit</a>`;
-        } else {
-            isAdmin = false;
-            if (adminPanel) adminPanel.style.display = 'none';
-            if (userStatus) userStatus.innerHTML = `<i data-lucide="user" class="icon"></i> Uživatel1 | <a href="#" id="logout-btn" style="color: #fef08a;">Odhlásit</a>`;
-        }
+        const displayName = user.email === 'admin@stampio.cz' ? 'Admin' : user.email.split('@')[0];
+        if (adminPanel) adminPanel.style.display = 'block';
+        if (userStatus) userStatus.innerHTML = `<i data-lucide="user" class="icon"></i> ${displayName} | <a href="#" id="logout-btn" style="color: #fef08a;">Odhlásit</a>`;
 
         const logoutBtn = document.getElementById('logout-btn');
         if (logoutBtn) {
@@ -43,16 +37,23 @@ onAuthStateChanged(auth, (user) => {
                 signOut(auth);
             });
         }
+        loadUserStamps(user.uid);
     } else {
-        isAdmin = false;
+        // Anonymní uživatel: skryjeme formulář a vyčistíme mapu
         if (adminPanel) adminPanel.style.display = 'none';
         if (userStatus) userStatus.innerHTML = `<a href="login.html" style="color: white; font-weight: 600;"><i data-lucide="log-in" class="icon"></i> Přihlásit se</a>`;
+        clearMapMarkers();
     }
     if (window.lucide) window.lucide.createIcons();
-    loadSavedStamps();
 });
 
-// 4. BEZPEČNÉ ZPŘESŇOVÁNÍ POLOHY (ZÁLOHA Z OPENSTREETMAP)
+function clearMapMarkers() {
+    Object.keys(activeMarkers).forEach(id => {
+        map.removeLayer(activeMarkers[id]);
+        delete activeMarkers[id];
+    });
+}
+
 async function refineLocationWithGoogleMaps(stampName, defaultLat, defaultLng) {
     const searchQuery = `${stampName}, Česká republika`;
     try {
@@ -63,20 +64,16 @@ async function refineLocationWithGoogleMaps(stampName, defaultLat, defaultLng) {
             const foundLat = parseFloat(data[0].lat);
             const foundLng = parseFloat(data[0].lon);
 
-            // Kontrola, zda nalezený bod spadá do hranic ČR
             if (foundLat >= 48.5 && foundLat <= 51.1 && foundLng >= 12.0 && foundLng <= 18.9) {
                 return { lat: foundLat, lng: foundLng };
             }
         }
     } catch (e) {
-        console.warn("Zpřesnění polohy z rozhraní selhalo, použijí se katalogové souřadnice.", e);
+        console.warn("Zpřesnění polohy selhalo, použijí se katalogové souřadnice.", e);
     }
-    
-    // Fallback na bezpečné souřadnice z katalogu
     return { lat: defaultLat, lng: defaultLng };
 }
 
-// 5. NAŠEPTÁVAČ PODLE ČÍSLA Z KATALOGU
 if (numberInput) {
     numberInput.addEventListener('input', async () => {
         const num = Number(numberInput.value);
@@ -87,7 +84,6 @@ if (numberInput) {
             nameInput.value = `${selectedStamp.name} (${selectedStamp.okres || ''})`;
             addBtn.disabled = false;
 
-            // Pokus o zpřesnění na pozadí s bezpečným návratem na původní souřadnice
             const accurateCoords = await refineLocationWithGoogleMaps(
                 selectedStamp.name, 
                 selectedStamp.lat, 
@@ -103,26 +99,22 @@ if (numberInput) {
     });
 }
 
-// 6. NAČTENÍ ULOŽENÝCH ZNÁMEK Z FIREBASE
-async function loadSavedStamps() {
-    Object.keys(activeMarkers).forEach(id => {
-        map.removeLayer(activeMarkers[id]);
-        delete activeMarkers[id];
-    });
+// Načtení známek konkrétního uživatele
+async function loadUserStamps(uid) {
+    clearMapMarkers();
 
     try {
-        const querySnapshot = await getDocs(collection(db, "stamps"));
+        const querySnapshot = await getDocs(collection(db, "users", uid, "stamps"));
         querySnapshot.forEach((docSnap) => {
             const stamp = docSnap.data();
             const docId = docSnap.id;
             addMarkerToMap(stamp, docId);
         });
     } catch (e) {
-        console.error("Chyba při načítání známek z databáze: ", e);
+        console.error("Chyba při načítání známek uživatele: ", e);
     }
 }
 
-// 7. PŘIDÁNÍ MARKERU A VYTVOŘENÍ POPUPU
 function addMarkerToMap(stamp, docId) {
     const marker = L.marker([stamp.lat, stamp.lng]).addTo(map);
     marker.stampNumber = stamp.number;
@@ -139,7 +131,7 @@ function renderPopup(marker, stamp, docId) {
             <span style="color: #64748b; font-size: 13px;">${stamp.okres ? stamp.okres + ' (' + stamp.kraj + ')' : ''}</span>
     `;
 
-    if (isAdmin) {
+    if (currentUser) {
         popupContentHtml += `<br><br>
             <div style="display: flex; flex-direction: column; gap: 6px;">
                 <button id="move-btn-${docId}" style="background-color: #b5832a; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 4px;">
@@ -155,7 +147,7 @@ function renderPopup(marker, stamp, docId) {
     const popupDiv = document.createElement('div');
     popupDiv.innerHTML = popupContentHtml;
 
-    if (isAdmin) {
+    if (currentUser) {
         const deleteBtn = popupDiv.querySelector(`#delete-btn-${docId}`);
         if (deleteBtn) {
             deleteBtn.addEventListener('click', () => {
@@ -174,12 +166,12 @@ function renderPopup(marker, stamp, docId) {
     marker.bindPopup(popupDiv);
 }
 
-// 8. MANUÁLNÍ PŘETAHOVÁNÍ BODU (REŽIM ÚPRAVY POLOHY)
 function enableMarkerDragging(marker, docId, stamp) {
+    if (!currentUser) return;
     marker.closePopup();
     marker.dragging.enable();
 
-    alert(`Režim úpravy poloh pro TZ č. ${stamp.number} (${stamp.name}) je aktivní.\n\nNyní chytněte bod na mapě myší a přetáhněte ho na přesné místo.`);
+    alert(`Režim úpravy polohy pro TZ č. ${stamp.number} (${stamp.name}) je aktivní.\n\nNyní chytněte bod na mapě myší a přetáhněte ho na přesné místo.`);
 
     marker.once('dragend', async (event) => {
         const newLatLng = event.target.getLatLng();
@@ -188,7 +180,7 @@ function enableMarkerDragging(marker, docId, stamp) {
 
         if (confirm(`Chcete uložit novou polohu pro známku č. ${stamp.number}?\n\nZeměpisná šířka: ${newLat}\nZeměpisná délka: ${newLng}`)) {
             try {
-                await updateDoc(doc(db, "stamps", docId), {
+                await updateDoc(doc(db, "users", currentUser.uid, "stamps", docId), {
                     lat: newLat,
                     lng: newLng
                 });
@@ -199,8 +191,8 @@ function enableMarkerDragging(marker, docId, stamp) {
 
                 alert(`✅ Nová poloha známky č. ${stamp.number} byla úspěšně uložena!`);
             } catch (error) {
-                console.error("Chyba při aktualizaci polohy v databázi: ", error);
-                alert("❌ Chyba při ukládání nové polohy do databáze.");
+                console.error("Chyba při aktualizaci polohy: ", error);
+                alert("❌ Chyba při ukládání nové polohy.");
             }
         } else {
             marker.setLatLng([stamp.lat, stamp.lng]);
@@ -210,12 +202,11 @@ function enableMarkerDragging(marker, docId, stamp) {
     });
 }
 
-// 9. ODEBRÁNÍ ZNÁMKY Z FIREBASE
 async function removeStampFromDb(docId, stampName, stampNumber) {
-    if (!isAdmin) return;
-    if (confirm(`Opravdu chcete odebrat TZ č. ${stampNumber} (${stampName}) ze sbírky?`)) {
+    if (!currentUser) return;
+    if (confirm(`Opravdu chcete odebrat TZ č. ${stampNumber} (${stampName}) ze své sbírky?`)) {
         try {
-            await deleteDoc(doc(db, "stamps", docId));
+            await deleteDoc(doc(db, "users", currentUser.uid, "stamps", docId));
             if (activeMarkers[docId]) {
                 map.removeLayer(activeMarkers[docId]);
                 delete activeMarkers[docId];
@@ -226,11 +217,10 @@ async function removeStampFromDb(docId, stampName, stampNumber) {
     }
 }
 
-// 10. ODESLÁNÍ FORMULÁŘE PŘIDÁNÍ ZNÁMKY
 if (form) {
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        if (!selectedStamp || !isAdmin) return;
+        if (!selectedStamp || !currentUser) return;
 
         const isDuplicate = Object.values(activeMarkers).some(
             marker => marker.stampNumber === selectedStamp.number
@@ -251,7 +241,7 @@ if (form) {
         };
 
         try {
-            const docRef = await addDoc(collection(db, "stamps"), newStampData);
+            const docRef = await addDoc(collection(db, "users", currentUser.uid, "stamps"), newStampData);
             addMarkerToMap(newStampData, docRef.id);
             
             map.flyTo([selectedStamp.lat, selectedStamp.lng], 12);

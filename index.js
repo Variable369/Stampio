@@ -11,25 +11,35 @@ const statTopRegion = document.getElementById('stat-top-region');
 const recentGrid = document.getElementById('recent-stamps-grid');
 const userStatus = document.getElementById('user-status');
 
-// Sledování stavu přihlášení
 onAuthStateChanged(auth, (user) => {
     if (user) {
-        const username = user.email === 'admin@stampio.cz' ? 'admin' : 'Uživatel1';
-        userStatus.innerHTML = `<i data-lucide="user" class="icon"></i> ${username} | <a href="#" id="logout-btn" style="color: #fef08a;">Odhlásit</a>`;
+        const displayName = user.email === 'admin@stampio.cz' ? 'Admin' : user.email.split('@')[0];
+        userStatus.innerHTML = `<i data-lucide="user" class="icon"></i> ${displayName} | <a href="#" id="logout-btn" style="color: #fef08a;">Odhlásit</a>`;
         document.getElementById('logout-btn').addEventListener('click', (e) => {
             e.preventDefault();
             signOut(auth);
         });
+        loadUserStats(user.uid);
     } else {
         userStatus.innerHTML = `<a href="login.html" style="color: white; font-weight: 600;"><i data-lucide="log-in" class="icon"></i> Přihlásit se</a>`;
+        resetHomeStats();
     }
     if (window.lucide) window.lucide.createIcons();
 });
 
-// Načtení statistik
-async function loadHomeStats() {
+function resetHomeStats() {
+    statTotal.textContent = '0';
+    statCoverage.textContent = '0,00 %';
+    statTopRegion.textContent = '-';
+    recentGrid.innerHTML = `
+        <p style="text-align: center; color: var(--color-text-muted); width: 100%; grid-column: 1/-1;">
+            Pro zobrazení vaší osobní sbírky a statistik se prosím <a href="login.html" style="color: var(--color-primary); font-weight: 600;">přihlaste</a>.
+        </p>`;
+}
+
+async function loadUserStats(uid) {
     try {
-        const querySnapshot = await getDocs(collection(db, "stamps"));
+        const querySnapshot = await getDocs(collection(db, "users", uid, "stamps"));
         const stamps = [];
         const regionCounts = {};
 
@@ -70,7 +80,7 @@ function displayRecentStamps(recentList) {
     recentGrid.innerHTML = '';
 
     if (recentList.length === 0) {
-        recentGrid.innerHTML = `<p style="text-align: center; color: var(--color-text-muted); width: 100%;">Zatím nemáte v databázi žádné známky.</p>`;
+        recentGrid.innerHTML = `<p style="text-align: center; color: var(--color-text-muted); width: 100%; grid-column: 1/-1;">Zatím nemáte ve své sbírce žádné známky.</p>`;
         return;
     }
 
@@ -87,5 +97,3 @@ function displayRecentStamps(recentList) {
 
     if (window.lucide) window.lucide.createIcons();
 }
-
-loadHomeStats();
